@@ -199,4 +199,4 @@ def batch_transcribe(directory):
                     print(f"Skipping transcription for {file_path}, as it failed.")
 
 # Use the function with a parent directory containing subdirectories
-batch_transcribe(r"C:\Users\Daniel Keefe\Documents\CatholicAIProject\AudiotoTextAPI\custom\Youtube Homily Downloads")
+batch_transcribe(r"ENTER PARENT DIRECTORY HERE")
