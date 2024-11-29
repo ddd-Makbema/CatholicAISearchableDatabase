@@ -1,0 +1,47 @@
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+app.use(express.json());
+
+// Directory to save files
+const saveDirectory = path.join(__dirname, 'saved_files');
+if (!fs.existsSync(saveDirectory)) {
+  fs.mkdirSync(saveDirectory, { recursive: true });
+}
+
+// Endpoint to save files
+app.post('/save', (req, res) => {
+  const { query, outputContent, notesContent } = req.body;
+
+  if (!query || !outputContent) {
+    return res.status(400).send('Query and output content are required.');
+  }
+
+  // Generate filenames
+  const sanitizedQuery = query.replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const outputFileName = `${sanitizedQuery}.txt`;
+  const notesFileName = `${sanitizedQuery}_notes.txt`;
+
+  try {
+    // Save output file
+    fs.writeFileSync(path.join(saveDirectory, outputFileName), outputContent);
+
+    // Save notes file (if provided)
+    if (notesContent) {
+      fs.writeFileSync(path.join(saveDirectory, notesFileName), notesContent);
+    }
+
+    res.status(200).send('Files saved successfully.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to save files.');
+  }
+});
+
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
