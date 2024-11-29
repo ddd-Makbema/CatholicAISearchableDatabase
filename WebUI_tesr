@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Interface</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .tabs {
+      display: flex;
+      background: #f4f4f4;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #ddd;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .box {
+      border: 1px solid #ddd;
+      margin: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .flex-container {
+      display: flex;
+      gap: 10px;
+    }
+    .left-box {
+      width: 30%;
+    }
+    .right-boxes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 70%;
+    }
+    .full-box {
+      width: 100%;
+    }
+    textarea, div {
+      width: 100%;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('composition')">Composition</div>
+    <div class="tab" onclick="showTab('comparison')">Comparison</div>
+    <div class="tab" onclick="showTab('legislator')">Legislator</div>
+  </div>
+
+  <div id="composition" class="tab-content active">
+    <div class="flex-container">
+      <textarea id="notes" class="box left-box" placeholder="Take notes here..."></textarea>
+      <div class="right-boxes">
+        <div id="output-viewer" class="box">Search results will appear here...</div>
+        <div class="box">
+          <input type="text" id="search-input" placeholder="Search..." oninput="performSearch()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="comparison" class="tab-content">
+    <div class="flex-container">
+      <div class="box left-box" style="height: 200px; overflow-y: scroll;" id="output-viewer-1">Scroll through part 1...</div>
+      <div class="box left-box" style="height: 200px; overflow-y: scroll;" id="output-viewer-2">Scroll through part 2...</div>
+    </div>
+    <textarea id="notes" class="box full-box" placeholder="Take notes here..."></textarea>
+  </div>
+
+  <div id="legislator" class="tab-content">
+    <div id="output-viewer" class="box full-box" style="height: 500px;">Legislator output view...</div>
+  </div>
+
+  <script>
+    // Tab switch function
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab:contains('${tabId}')`).classList.add('active');
+    }
+
+    // Perform search (placeholder function)
+    function performSearch() {
+      const query = document.getElementById('search-input').value;
+      // Replace with actual ElasticSearch query
+      document.getElementById('output-viewer').textContent = `Results for: "${query}"`;
+      document.getElementById('output-viewer-1').textContent = `Results for: "${query}" (scrollable part 1)`;
+      document.getElementById('output-viewer-2').textContent = `Results for: "${query}" (scrollable part 2)`;
+    }
+
+    // Synchronize notes across tabs
+    const notes = document.querySelectorAll('#notes');
+    notes.forEach(note => note.addEventListener('input', () => {
+      notes.forEach(n => n.value = note.value);
+    }));
+  </script>
+</body>
+</html>
