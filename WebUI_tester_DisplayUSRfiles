@@ -1,0 +1,15 @@
+function fetchFiles() {
+  fetch('/files')
+    .then(response => response.json())
+    .then(files => {
+      const filesList = document.getElementById('files-list');
+      filesList.innerHTML = '';
+
+      files.forEach(file => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `Query: ${file.query}`;
+        filesList.appendChild(listItem);
+      });
+    })
+    .catch(err => console.error('Error fetching files:', err));
+}
