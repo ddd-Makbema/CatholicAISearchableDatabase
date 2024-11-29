@@ -1,0 +1,101 @@
+const express = require('express');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Session configuration
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// In-memory storage for simplicity (replace with a database)
+const users = {}; // Example: { "username": { passwordHash: "...", files: [] } }
+
+// Directory to save user files
+const userFilesDir = path.join(__dirname, 'user_files');
+if (!fs.existsSync(userFilesDir)) {
+  fs.mkdirSync(userFilesDir, { recursive: true });
+}
+
+// **1. User Registration**
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).send('Username and password are required.');
+
+  if (users[username]) return res.status(400).send('User already exists.');
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  users[username] = { passwordHash, files: [] };
+  fs.mkdirSync(path.join(userFilesDir, username), { recursive: true }); // Create user's directory
+  res.status(201).send('User registered successfully.');
+});
+
+// **2. User Login**
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = users[username];
+
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    return res.status(401).send('Invalid username or password.');
+  }
+
+  req.session.username = username; // Save session
+  res.status(200).send('Logged in successfully.');
+});
+
+// **3. Save Output and Notes**
+app.post('/save', (req, res) => {
+  const { outputContent, notesContent, query } = req.body;
+  const username = req.session.username;
+
+  if (!username) return res.status(401).send('Unauthorized.');
+  if (!query || !outputContent) return res.status(400).send('Query and output content are required.');
+
+  const sanitizedQuery = query.replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const userDir = path.join(userFilesDir, username);
+
+  try {
+    // Save files
+    const outputFilePath = path.join(userDir, `${sanitizedQuery}.txt`);
+    const notesFilePath = path.join(userDir, `${sanitizedQuery}_notes.txt`);
+
+    fs.writeFileSync(outputFilePath, outputContent);
+    fs.writeFileSync(notesFilePath, notesContent);
+
+    // Record file information in user data
+    users[username].files.push({ query, outputFilePath, notesFilePath });
+
+    res.status(200).send('Files saved successfully.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to save files.');
+  }
+});
+
+// **4. Retrieve User Files**
+app.get('/files', (req, res) => {
+  const username = req.session.username;
+
+  if (!username) return res.status(401).send('Unauthorized.');
+
+  res.status(200).json(users[username].files);
+});
+
+// **5. Logout**
+app.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.status(200).send('Logged out successfully.');
+});
+
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
