@@ -1,0 +1,35 @@
+// Register User
+function register() {
+  const username = document.getElementById('register-username').value;
+  const password = document.getElementById('register-password').value;
+
+  fetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+    .then(response => response.text())
+    .then(data => alert(data))
+    .catch(err => console.error('Error:', err));
+}
+
+// Login User
+function login() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+
+  fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+    .then(response => {
+      if (response.ok) {
+        alert('Logged in successfully.');
+        // Show the main application interface
+      } else {
+        alert('Invalid username or password.');
+      }
+    })
+    .catch(err => console.error('Error:', err));
+}
